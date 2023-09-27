@@ -35,7 +35,7 @@ for ii=1:6:nfiles
     %contours = [contours;roi.Position];
     contours = roi.Position;
     set(gcf,'position',[1000,1000,2000,3200])
-    csvwrite(directory+"contours/"+sprintf('%04d',ii)+".csv",contours)
+    csvwrite("/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-09-26/1st/contours/"+sprintf('%04d',ii)+".csv",contours)
     close
 end 
 %% show contours
