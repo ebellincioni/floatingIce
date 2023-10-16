@@ -13,9 +13,9 @@ scatter(a(:,1),a(:,2))
 pbaspect([1 1 1])
 grid on
 %% reading all images
-addpath('/Users/edoardo/Downloads/github_repo');
+addpath('/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/github_repo');
 readraw;
-directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-09-26/1st/';
+directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-10-04/3rd/';
 imagefiles = dir(strcat(directory,'DSC*'));      
 nfiles = length(imagefiles);    % Number of files found
 contours = {};
@@ -27,7 +27,7 @@ for ii=1:6:nfiles
     f = figure();
     f.Position(3:4) = [2000,3200];
    
-    imshow(I2(500:4000,1500:5500));
+    imshow(I2); % y,x
     title(currentfilename);
     axis on
     
