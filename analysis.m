@@ -15,11 +15,11 @@ grid on
 %% reading all images
 addpath('/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/github_repo');
 readraw;
-directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-10-04/3rd/';
+directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-10-17/2nd/';
 imagefiles = dir(strcat(directory,'DSC*'));      
 nfiles = length(imagefiles);    % Number of files found
 contours = {};
-for ii=1:6:nfiles
+for ii=1:3:nfiles
     currentfilename = imagefiles(ii).name;
     %currentimage = imread(strcat(directory,currentfilename));
     I = imread(strcat(directory,currentfilename));
@@ -27,7 +27,8 @@ for ii=1:6:nfiles
     f = figure();
     f.Position(3:4) = [2000,3200];
    
-    imshow(I2); % y,x
+    % imshow(I2(1000:3500,2000:6000)); % y,x
+    imshow(I2);
     title(currentfilename);
     axis on
     
