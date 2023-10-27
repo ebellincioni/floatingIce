@@ -15,11 +15,11 @@ grid on
 %% reading all images
 addpath('/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/github_repo');
 readraw;
-directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-10-17/2nd/';
+directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-10-19/2nd/';
 imagefiles = dir(strcat(directory,'DSC*'));      
 nfiles = length(imagefiles);    % Number of files found
 contours = {};
-for ii=1:3:nfiles
+for ii=1:7:nfiles
     currentfilename = imagefiles(ii).name;
     %currentimage = imread(strcat(directory,currentfilename));
     I = imread(strcat(directory,currentfilename));
