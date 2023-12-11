@@ -15,7 +15,7 @@ grid on
 %% reading all images
 addpath('/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/github_repo');
 readraw;
-directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-12-01/1st/';
+directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-12-08/2nd/';
 imagefiles = dir(strcat(directory,'DSC*'));      
 nfiles = length(imagefiles);    % Number of files found
 contours = {};
