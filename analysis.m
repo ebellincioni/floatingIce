@@ -16,10 +16,10 @@ grid on
 addpath('/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/github_repo');
 readraw;
 directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-12-01/1st_videos/rotation_05/';
-imagefiles = dir(strcat(directory,'frame*'));      
+imagefiles = dir(strcat(directory,'frame0051*'));      
 nfiles = length(imagefiles);    % Number of files found
 contours = {};
-for ii=95:1:nfiles
+for ii=1:1:nfiles
     currentfilename = imagefiles(ii).name;
     %currentimage = imread(strcat(directory,currentfilename));
     I = imread(strcat(directory,currentfilename));
@@ -36,7 +36,7 @@ for ii=95:1:nfiles
     %contours = [contours;roi.Position];
     contours = roi.Position;
     set(gcf,'position',[1000,1000,2000,3200])
-    csvwrite(directory+"waterline/"+sprintf('%04d',ii)+".csv",contours)
+    csvwrite(directory+"full_contours/"+sprintf('%04d',ii)+".csv",contours)
     close
 end 
 %% show contours

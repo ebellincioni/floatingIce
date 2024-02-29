@@ -16,9 +16,9 @@ MACHINE=PC_GNU#DISCOVERER
 OBJDIR=obj
 
 ifeq ($(MACHINE),PC_GNU)
-	FC = h5pfc -cpp -fdefault-real-8 -fdefault-double-8 -O0
+	FC = h5pfc -cpp -fdefault-real-8 -fdefault-double-8 -O3
 	# FC += -pg -fbacktrace -fbounds-check
-	LDFLAGS = -lfftw3 -llapack -lblas -ldl -ld_classic
+	LDFLAGS += -lfftw3 -llapack -lblas -ldl
 endif
 ifeq ($(MACHINE),PC_INTEL)
 	FC = h5pfc -fpp -r8 -O3 #-warn all
@@ -139,7 +139,7 @@ PROGRAM = afid
 #Compiling 
 all: objdir $(PROGRAM) 
 $(PROGRAM): $(MOBJS) $(OBJS) 
-	$(FC) -o $@ $^ $(LDFLAGS) -L/opt/homebrew/lib -I/opt/homebrew/include
+	$(FC) -o $@ $^ $(LDFLAGS) 
 
 #============================================================================
 #  Dependencies 
