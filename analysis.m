@@ -15,20 +15,21 @@ grid on
 %% reading all images
 addpath('/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/github_repo');
 readraw;
-directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-12-01/1st_videos/rotation_05/';
-imagefiles = dir(strcat(directory,'frame0051*'));      
+directory = '/Users/edoardo/Library/CloudStorage/OneDrive-UniversityofTwente/floating/2023-12-06/';
+imagefiles = dir(strcat(directory,'/Cam*/*.tif'));      
 nfiles = length(imagefiles);    % Number of files found
 contours = {};
 for ii=1:1:nfiles
     currentfilename = imagefiles(ii).name;
+    currentfolder = imagefiles(ii).folder;
     %currentimage = imread(strcat(directory,currentfilename));
-    I = imread(strcat(directory,currentfilename));
+    I = imread(strcat(currentfolder,'/',currentfilename));
     I2 = mat2gray(I);
     f = figure();
     f.Position(3:4) = [2000,3200];
    
-    imshow(I2(200:1600,1200:3000)); % y,x
-    % imshow(I2);
+    % imshow(I2(200:1600,1200:3000)); % y,x
+    imshow(I2*3);
     title(currentfilename);
     axis on
     
@@ -36,7 +37,8 @@ for ii=1:1:nfiles
     %contours = [contours;roi.Position];
     contours = roi.Position;
     set(gcf,'position',[1000,1000,2000,3200])
-    csvwrite(directory+"full_contours/"+sprintf('%04d',ii)+".csv",contours)
+    % csvwrite(directory+"full_contours/"+sprintf('%04d',ii)+".csv",contours)
+    csvwrite(currentfolder+"/"+sprintf('%04d',ii)+".csv",contours)
     close
 end 
 %% show contours
