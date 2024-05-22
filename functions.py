@@ -34,7 +34,19 @@ c_s = 4186 # J/kgK, specific heat water
 
 
 def uNu_fit_per(a_params,p_params,t,a0,p0,T_water):
-    # if len(params) != 3: return
+    """Function that returns the Nusselt number coming from a fit through areas and perimeters of an experiment. 
+
+    Args:
+        a_params (lmfit Parameters): best fit parameters for the areas
+        p_params (lmfit Parameters): best fit parameters for the perimeters
+        t (np.array): time
+        a0 (float): initial area
+        p0 (float): initial perimeter
+        T_water (float): water temperature
+
+    Returns:
+        uarray: Nusselt numbers with error. 
+    """    
     a_a = ufloat(a_params['a']['value'],a_params['a']['error'])
     a_b = ufloat(a_params['b']['value'],a_params['b']['error'])
     a_c = ufloat(a_params['c']['value'],a_params['c']['error'])
@@ -191,7 +203,7 @@ def correct_outliers(y,precision=0.1):
         np.array: array without outliers.
     """    
     outliers = np.where(abs(np.gradient(y/y[0]))>precision)[0]
-    if len(outliers)>1:
+    if len(outliers)==1:
         # only works if there is one outlier
         y[np.mean(outliers,dtype=int)] = np.nan
         y = np.array(y)
