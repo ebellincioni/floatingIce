@@ -19,6 +19,13 @@ from matplotlib.lines import Line2D
 from uncertainties import ufloat,unumpy
 from lmfit import minimize, Parameters, Parameter, report_fit
 
+import matplotlib as mpl
+font = {'family' : 'Helvetica Neue',
+        'weight' : 'normal',
+        'size'   : 12}
+
+mpl.rc('font', **font)
+
 g = 9.81 # m/s2, gravity
 beta = 1e-4 # degC-1, thermal coefficient expansion water
 deltaT = 20.5 # degC, melting-ambient
