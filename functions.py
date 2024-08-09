@@ -66,7 +66,7 @@ def uNu_fit_per(a_params,p_params,t,a0,p0,T_water):
         Adot = (3*a_a*t**2+2*a_b*t+a_c) * unumpy.sqrt((a_a*t**3 + a_b*t**2 + a_c*t + a0)/np.pi) 
     except ValueError:
         Adot = (3*a_a*t**2+2*a_b*t+a_c) * np.sqrt((a_a.nominal_value*t**3 + a_b.nominal_value*t**2 + a_c.nominal_value*t + a0)/np.pi)
-    
+    T_in = 0. # force initial temperature to be zero
     h = -(Adot*2)*rho_ice*(L_f+c_s*T_in)/(p*T_water)
     return h/kappa
 
