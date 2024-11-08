@@ -39,6 +39,97 @@ rho_ice = 917 # kg/m3, density ice
 L_f = 334e3 # J/kg, latent heat fusion water
 c_s = 4186 # J/kgK, specific heat water 
 
+def sliding_window_polyfit(x, y, window_size=10, poly_order=2):
+    """
+    Fits a second-order polynomial in a sliding window over the data and calculates
+    the error for both the fit and the gradient.
+    
+    Parameters:
+    x (array-like): The x-values of the data points.
+    y (array-like): The y-values of the data points.
+    window_size (int): The size of the sliding window.
+    poly_order (int): The order of the polynomial (default is 2 for quadratic).
+    
+    Returns:
+    list of ndarray: List of polynomial coefficients for each window.
+    ndarray: Array of fitted y-values only at the central indices.
+    ndarray: Array of fitting errors (MSE) only at the central indices.
+    ndarray: Array of gradients at the central indices.
+    ndarray: Array of gradient errors at the central indices.
+    """
+    poly_coeffs = []
+    y_fitted = np.full_like(y, np.nan, dtype=np.double)  # Array to hold central fitted values
+    fit_errors = np.full_like(y, np.nan, dtype=np.double)  # Array to hold errors at central points
+    gradient = np.full_like(y, np.nan, dtype=np.double)  # Array to hold gradient at central points
+    gradient_errors = np.full_like(y, np.nan, dtype=np.double)  # Array to hold gradient errors
+    
+    # Loop over data with sliding windows
+    for i in range(len(x) - window_size + 1):
+        # Select data within the window
+        x_window = x[i:i + window_size]
+        y_window = y[i:i + window_size]
+        
+        # Fit a polynomial of the given order to the window data
+        coeffs = np.polyfit(x_window, y_window, poly_order)
+        poly_coeffs.append(coeffs)
+        
+        # Generate fitted values for the current window
+        y_fit = np.polyval(coeffs, x_window)
+        
+        # Calculate the mean squared error (MSE) for the current window
+        error = np.mean((y_window - y_fit) ** 2)
+        
+        # Calculate the gradient (slope) of the fit (1st derivative of the polynomial)
+        gradient_value = 2 * coeffs[0] * x_window[window_size // 2] + coeffs[1]
+        
+        # Estimate the gradient error as the standard deviation of residuals divided by the range of x values
+        gradient_error = np.sqrt(np.mean((y_window - y_fit) ** 2)) / (x_window[-1] - x_window[0])
+        
+        # Assign the results to the central index
+        central_index = i + window_size // 2
+        y_fitted[central_index] = y_fit[window_size // 2]
+        fit_errors[central_index] = error
+        gradient[central_index] = gradient_value
+        gradient_errors[central_index] = gradient_error
+    
+    return poly_coeffs, y_fitted, fit_errors, gradient, gradient_errors
+
+def remove_and_interpolate_outliers(data, max_relative_decrease=0.1):
+    """
+    Removes isolated outliers from a 1D monotonically decreasing array by replacing
+    them with linearly interpolated values if the decrease is too sharp.
+    
+    Parameters:
+    data (array-like): The input 1D array, expected to be monotonically decreasing.
+    max_relative_decrease (float): The maximum allowed relative decrease between consecutive elements.
+    
+    Returns:
+    ndarray: Array with isolated outliers replaced by interpolated values.
+    """
+    # Convert to a NumPy array for easier manipulation
+    data = np.array(data, dtype=np.float64)
+    cleaned_data = data.copy()  # Copy the original array to preserve it
+    
+    # Loop through the array to identify and interpolate outliers
+    for i in range(1, len(data) - 1):
+        previous_value = cleaned_data[i - 1]
+        current_value = data[i]
+        next_value = data[i + 1]
+        
+        # Calculate the relative decrease with the previous value
+        relative_decrease = (previous_value - current_value) / previous_value
+        
+        # Check if current value is an outlier based on the relative decrease threshold
+        if relative_decrease > max_relative_decrease:
+            # Interpolate as the average of previous and next valid values
+            interpolated_value = (previous_value + next_value) / 2
+            cleaned_data[i] = interpolated_value
+            # print(f"Outlier detected at index {i}: {current_value}, replaced with {interpolated_value}")
+    
+    return cleaned_data
+
+
+
 
 def uNu_fit_per(a_params,p_params,t,a0,p0,T_water):
     """Function that returns the Nusselt number coming from a fit through areas and perimeters of an experiment. 
@@ -65,7 +156,7 @@ def uNu_fit_per(a_params,p_params,t,a0,p0,T_water):
         # the reason why I'm doing this is because there are some values of L-\sigma_L that cross zero. And the sqrt screws up. This obviously is not true for L.nominal_value
         Adot = (3*a_a*t**2+2*a_b*t+a_c) * unumpy.sqrt((a_a*t**3 + a_b*t**2 + a_c*t + a0)/np.pi) 
     except ValueError:
-        Adot = (3*a_a*t**2+2*a_b*t+a_c) * np.sqrt((a_a.nominal_value*t**3 + a_b.nominal_value*t**2 + a_c.nominal_value*t + a0)/np.pi)
+        Adot = (3*a_a.nominal_value*t**2+2*a_b.nominal_value*t+a_c.nominal_value) * np.sqrt((a_a.nominal_value*t**3 + a_b.nominal_value*t**2 + a_c.nominal_value*t + a0)/np.pi)
     T_in = 0. # force initial temperature to be zero
     h = -(Adot*2)*rho_ice*(L_f+c_s*T_in)/(p*T_water)
     return h/kappa
