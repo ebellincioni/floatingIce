@@ -39,6 +39,39 @@ rho_ice = 917 # kg/m3, density ice
 L_f = 334e3 # J/kg, latent heat fusion water
 c_s = 4186 # J/kgK, specific heat water 
 
+def gradient_with_errors(uarray, dx):
+    """
+    Calculates the gradient of a 1D array of ufloat values (with uncertainties).
+    
+    Parameters:
+        uarray (numpy array of ufloat): The array of uncertain values.
+        dx (float): The spacing between points in the array (assumed constant).
+        
+    Returns:
+        numpy array of ufloat: The gradient with propagated uncertainties.
+    """
+    # Initialize the gradient array
+    grad_uarray = []
+
+    # Loop over elements to calculate the gradient with propagated uncertainties
+    for i in range(len(uarray)):
+        if i == 0:
+            # Forward difference for the first element
+            diff = uarray[i + 1] - uarray[i]
+            grad = diff / dx
+        elif i == len(uarray) - 1:
+            # Backward difference for the last element
+            diff = uarray[i] - uarray[i - 1]
+            grad = diff / dx
+        else:
+            # Central difference for the middle elements
+            diff = uarray[i + 1] - uarray[i - 1]
+            grad = diff / (2 * dx)
+        
+        grad_uarray.append(grad)
+
+    return np.array(grad_uarray)
+
 def sliding_window_polyfit(x, y, window_size=10, poly_order=2):
     """
     Fits a second-order polynomial in a sliding window over the data and calculates
@@ -131,12 +164,14 @@ def remove_and_interpolate_outliers(data, max_relative_decrease=0.1):
 
 
 
-def uNu_fit_per(a_params,p_params,t,a0,p0,T_water):
+def uNu_fit_per(a_params,a_sigma,p_params,p_sigma,t,a0,p0,T_water):
     """Function that returns the Nusselt number coming from a fit through areas and perimeters of an experiment. 
 
     Args:
         a_params (lmfit Parameters): best fit parameters for the areas
         p_params (lmfit Parameters): best fit parameters for the perimeters
+        a_sigma (array) : array of stds for areas
+        p_sigma (array) : array of stds for perimeters
         t (np.array): time
         a0 (float): initial area
         p0 (float): initial perimeter
@@ -145,20 +180,23 @@ def uNu_fit_per(a_params,p_params,t,a0,p0,T_water):
     Returns:
         uarray: Nusselt numbers with error. 
     """    
-    a_a = ufloat(a_params['a']['value'],a_params['a']['error'])
-    a_b = ufloat(a_params['b']['value'],a_params['b']['error'])
-    a_c = ufloat(a_params['c']['value'],a_params['c']['error'])
-    p_a = ufloat(p_params['a']['value'],p_params['a']['error'])
-    p_b = ufloat(p_params['b']['value'],p_params['b']['error'])
-    p_c = ufloat(p_params['c']['value'],p_params['c']['error'])
-    p = p_a*t**3 + p_b*t**2 + p_c*t + p0 # perimeter
+    a_a = a_params['a']['value']
+    a_b = a_params['b']['value']
+    a_c = a_params['c']['value']
+    a = unumpy.uarray([i for i in a_a*t**3 + a_b*t**2 + a_c*t + a0], a_sigma)
+    p_a = p_params['a']['value']
+    p_b = p_params['b']['value']
+    p_c = p_params['c']['value']
+    p = unumpy.uarray([i for i in p_a*t**3 + p_b*t**2 + p_c*t + p0], p_sigma) # perimeter
     try:
         # the reason why I'm doing this is because there are some values of L-\sigma_L that cross zero. And the sqrt screws up. This obviously is not true for L.nominal_value
         Adot = (3*a_a*t**2+2*a_b*t+a_c) * unumpy.sqrt((a_a*t**3 + a_b*t**2 + a_c*t + a0)/np.pi) 
     except ValueError:
         Adot = (3*a_a.nominal_value*t**2+2*a_b.nominal_value*t+a_c.nominal_value) * np.sqrt((a_a.nominal_value*t**3 + a_b.nominal_value*t**2 + a_c.nominal_value*t + a0)/np.pi)
-    T_in = 0. # force initial temperature to be zero
-    h = -(Adot*2)*rho_ice*(L_f+c_s*T_in)/(p*T_water)
+    # print(Adot)
+    Adot = gradient_with_errors(a,t[1]-t[0])*unumpy.sqrt(a/np.pi)
+    # print(Adot)
+    h = -(Adot*2)*rho_ice*L_f/(p*T_water)
     return h/kappa
 
 def pickFromDistr(mean,std):
@@ -183,17 +221,8 @@ def uNu_areas(A,T_water, dt):
     Returns:
         float: value of Nusselt number
     """   
-    h = -(ugradient(A)/dt)*rho_ice*(L_f+c_s*T_in)/(np.pi*T_water)
+    h = -(gradient_with_errors(A,dt))*rho_ice*(L_f+c_s*T_in)/(np.pi*T_water)
     return h/kappa
-
-def ugradient(uarr):
-    ytop = unumpy.nominal_values(uarr)+unumpy.std_devs(uarr)
-    ybottom = unumpy.nominal_values(uarr)-unumpy.std_devs(uarr)
-    gradient = np.gradient(unumpy.nominal_values(uarr))
-    maxgradient = ytop[:-1]-ybottom[1:]
-    mingradient = ybottom[:-1]-ytop[1:]
-    sigmagradient = maxgradient-mingradient
-    return unumpy.uarray(gradient[:-1],sigmagradient)
 
 def polynomial_fitting(xdata,ydata,degree,boolPlot):
     """Fits a polynomial to data. 
